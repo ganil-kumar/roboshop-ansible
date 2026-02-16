@@ -44,11 +44,12 @@
       type: A
       ttl: 1
       value: "{{ item.instances[0].private_ip_address }}"
-      wait: true
-    loop: "{{ ec2_output.results }}"
-    when: create == "create"
+      wait: false
+      overwrite: true
+    loop: "{{ ec2_output.results }}"  #lists
+    when: action == "create"
     
-  - name: create r53 records
+  - name: create r53 record for frontend
     amazon.aws.route53:
       state: present
       zone: "{{ domain_name }}"
@@ -56,12 +57,26 @@
       type: A
       ttl: 1
       value: "{{ item.instances[0].public_ip_address }}"
-      wait: true
+      wait: false
+      overwrite: true
     loop: "{{ ec2_output.results }}"
     when:     # is like and
     - item.item == "frontend"
     - action == "create"
 
+    ### DESTROY ###
+  - name: delete r53 records for frontend
+    amazon.aws.route53:
+      state: absent
+      zone: "{{ domain_name }}"
+      record: "roboshop-{{ env }}.{{ domain_name }}" # roboshop-dev.daws88s.online
+      type: A
+      ttl: 1
+    loop: "{{ instances }}"
+    when:  # and
+    - item == "frontend"
+    - action == "destroy"
+  
   - name: delete r53 records
     amazon.aws.route53:
       state: absent
@@ -76,5 +91,6 @@
     amazon.aws.ec2_instance:
       state: absent
       name: "{{ item }}-{{ env }}"
+      wait: false
     loop: "{{ instances }}"  
     when: action == "destroy"
