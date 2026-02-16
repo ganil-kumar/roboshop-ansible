@@ -5,7 +5,8 @@
   vars:
    sg_id: sg-02da904f56f6ac0ca
    ami_id: ami-0220d79f3f480ecf5
-   env: dev
+   domain_name: akviklabs.online
+   env: dev  
    instances:
    - mongodb
    - catalogue
@@ -28,3 +29,16 @@
   - name: print the output
     ansible.builtin.debug:
      msg: "{{ ec2_output }}"
+
+     # create route53
+  - name: create r53 records
+    amazon.aws.route53:
+      state: present
+      zone: "{{ domain_name }}"
+      record: "{{ item.item }}-{{ env }}.{{ domain_name }}" #mongodb-dev.akviklabs.online
+      type: A
+      ttl: 1
+      value: "{{ item.instances[0].private_ip_address }}"
+      wait: true
+    loop: "{{ ec2_output.results }}"
+    
