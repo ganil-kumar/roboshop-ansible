@@ -1,3 +1,5 @@
+# ansible-playbook -i localhost,   -e '{"instances":["mongodb","catalogue","redis","user","cart","mysql","shipping","rabbitmq","payment","frontend"]}'  -e action=destroy roboshop.yaml
+
 - name: create ec2 and r53 records
   hosts: all      # if don't use inventory file 
   connection: local
@@ -35,10 +37,21 @@
     amazon.aws.route53:
       state: present
       zone: "{{ domain_name }}"
-      record: "{{ item.item }}-{{ env }}.{{ domain_name }}" #mongodb-dev.akviklabs.online
+      record: "{{ item.item }}-{{ env }}.{{ domain_name }}" #mongodb-dev.akviklabs.online, frontend-dev.akviklabs.online
       type: A
       ttl: 1
       value: "{{ item.instances[0].private_ip_address }}"
       wait: true
     loop: "{{ ec2_output.results }}"
     
+  - name: create r53 records
+    amazon.aws.route53:
+      state: present
+      zone: "{{ domain_name }}"
+      record: "roboshop-{{ env }}.{{ domain_name }}" #roboshop-dev.akviklabs.online
+      type: A
+      ttl: 1
+      value: "{{ item.instances[0].public_ip_address }}"
+      wait: true
+    loop: "{{ ec2_output.results }}"
+    when: item.item == "frontend"
