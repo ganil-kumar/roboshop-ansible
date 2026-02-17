@@ -1,7 +1,7 @@
 # ansible-playbook -i localhost, -e '{"instances":["mongodb","catalogue","redis","user","cart","mysql","shipping","rabbitmq","payment","frontend"]}'  -e action=destroy roboshop.yaml
 
 - name: create ec2 and r53 records
-  hosts: all      # if don't use inventory file 
+  hosts: all        # if don't use inventory file 
   connection: local
 
   vars:
@@ -46,7 +46,7 @@
       value: "{{ item.instances[0].private_ip_address }}"
       wait: false
       overwrite: true
-    loop: "{{ ec2_output.results }}"  #lists
+    loop: "{{ ec2_output.results }}"  #list
     when: action == "create"
     
   - name: create r53 record for frontend
@@ -73,7 +73,7 @@
       type: A
       ttl: 1
     loop: "{{ instances }}"
-    when:  # and
+    when:    # and
     - item == "frontend"
     - action == "destroy"
   
