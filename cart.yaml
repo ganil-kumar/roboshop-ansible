@@ -47,7 +47,7 @@
     
   - name: install dependencies
     community.general.npm:
-    path: /app
+      path: /app
 
   - name: copy cart service
     ansible.builtin.template:
